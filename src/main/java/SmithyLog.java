@@ -31,7 +31,7 @@ public class SmithyLog {
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final String APPLICATION_NAME = "SmithyLog";
     private static String DETAILS_SIZE = "";
-
+    private static int i = 1;
     private static String CURRENT_TIME;
     private static String CURRENT_DATE;
 
@@ -51,6 +51,7 @@ public class SmithyLog {
         while (true) {
 
             if (requestJson.isFile() && requestJson.canRead()) {
+                i++;
                 getCurrentTime();
                 fetchJsonObjectFromRequest();
                 pushDataToGoogleSheet();
@@ -89,23 +90,25 @@ public class SmithyLog {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void pushDataToGoogleSheet() throws GeneralSecurityException, IOException {
+    public static void pushDataToGoogleSheet() throws IOException, GeneralSecurityException {
+        String range = String.format("A%s:D%s", i, i);
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Sheets service =
                 new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getSheetsService())
                         .setApplicationName(APPLICATION_NAME)
                         .build();
+
         ValueRange body = new ValueRange()
                 .setMajorDimension("COLUMNS")
                 .setValues(Arrays.asList(
+                        Collections.singletonList(i-1),
                         Collections.singletonList(CURRENT_DATE),
                         Collections.singletonList(CURRENT_TIME),
                         Collections.singletonList(DETAILS_SIZE)));
         service.spreadsheets().values()
-                .update(SPREADSHEET_ID, "Sheet1!B2", body)
+                .append(SPREADSHEET_ID, range, body)
                 .setValueInputOption("RAW")
                 .execute();
-        getCurrentTime();
     }
 
     public static void deleteRequestFile(File requestJson) throws IOException {
