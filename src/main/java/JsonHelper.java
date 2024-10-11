@@ -27,5 +27,6 @@ public class JsonHelper extends SmithyLog {
         FileReader reader = new FileReader(REQUEST_PATH);
         Object obj = jsonParser.parse(reader);
         getJsonDetails((JSONObject) obj);
+        reader.close();
     }
 }
