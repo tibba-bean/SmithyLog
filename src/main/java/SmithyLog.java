@@ -30,35 +30,28 @@ public class SmithyLog {
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final String APPLICATION_NAME = "SmithyLog";
-    private static final boolean FILE_SENT = false;
-    // private static String REQUEST_ABSOLUTE_PATH = "";
     private static String DETAILS_SIZE = "";
-    private static boolean FILE_EXISTS = false;
+    private static int i = 1;
     private static String CURRENT_TIME;
     private static String CURRENT_DATE;
 
     public static void main(String... args) throws IOException, ParseException, GeneralSecurityException, InterruptedException {
         JsonHelper.getRequestPath();
         File requestJson = new File(JsonHelper.REQUEST_PATH);
-        // REQUEST_ABSOLUTE_PATH = requestJson.getAbsolutePath();
         getSheetsService();
-        listenForJsonFile();
+        listenForJsonFile(requestJson);
     }
 
-    public static void endFileStream(FileInputStream fileInputStream) throws IOException {
-        fileInputStream.close();
-    }
-
-    public static void listenForJsonFile() throws
+    public static void listenForJsonFile(File requestJson) throws
             IOException,
             ParseException,
             GeneralSecurityException, InterruptedException {
 
 
         while (true) {
-            File requestJson = new File(JsonHelper.REQUEST_PATH);
-            if (requestJson.exists()) {
-                FILE_EXISTS = true;
+
+            if (requestJson.isFile() && requestJson.canRead()) {
+                i++;
                 getCurrentTime();
                 fetchJsonObjectFromRequest();
                 pushDataToGoogleSheet();
@@ -97,23 +90,25 @@ public class SmithyLog {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void pushDataToGoogleSheet() throws GeneralSecurityException, IOException {
+    public static void pushDataToGoogleSheet() throws IOException, GeneralSecurityException {
+        String range = String.format("A%s:D%s", i, i);
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Sheets service =
                 new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getSheetsService())
                         .setApplicationName(APPLICATION_NAME)
                         .build();
+
         ValueRange body = new ValueRange()
                 .setMajorDimension("COLUMNS")
                 .setValues(Arrays.asList(
+                        Collections.singletonList(i-1),
                         Collections.singletonList(CURRENT_DATE),
                         Collections.singletonList(CURRENT_TIME),
                         Collections.singletonList(DETAILS_SIZE)));
         service.spreadsheets().values()
-                .update(SPREADSHEET_ID, "Sheet1!B2", body)
+                .append(SPREADSHEET_ID, range, body)
                 .setValueInputOption("RAW")
                 .execute();
-        getCurrentTime();
     }
 
     public static void deleteRequestFile(File requestJson) throws IOException {
