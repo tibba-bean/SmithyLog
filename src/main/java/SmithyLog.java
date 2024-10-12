@@ -35,7 +35,12 @@ public class SmithyLog {
     private static String CURRENT_TIME;
     private static String CURRENT_DATE;
 
-    public static void main(String... args) throws IOException, ParseException, GeneralSecurityException, InterruptedException {
+    public static void main(String... args) throws
+            IOException,
+            ParseException,
+            GeneralSecurityException,
+            InterruptedException
+    {
         JsonHelper.getRequestPath();
         File requestJson = new File(JsonHelper.REQUEST_PATH);
         getSheetsService();
@@ -101,7 +106,7 @@ public class SmithyLog {
         ValueRange body = new ValueRange()
                 .setMajorDimension("COLUMNS")
                 .setValues(Arrays.asList(
-                        Collections.singletonList(i-1),
+                        Collections.singletonList(i - 1),
                         Collections.singletonList(CURRENT_DATE),
                         Collections.singletonList(CURRENT_TIME),
                         Collections.singletonList(DETAILS_SIZE)));
